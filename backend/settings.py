@@ -9,12 +9,16 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os
+import dj_database_url
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")
+
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -51,12 +55,9 @@ INSTALLED_APPS = [
 ASGI_APPLICATION = 'backend.asgi.application'
 
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)],
-        },
-    },
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
 }
 
 AUTH_USER_MODEL = 'accounts.Utilisateur'
@@ -112,15 +113,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'messagerie_db',
-        'USER': 'postgres',
-        'PASSWORD': 'sambatra',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL")
+    )
 }
+
 
 
 
@@ -167,3 +164,16 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+CORS_ALLOW_ALL_ORIGINS = False
+
+CORS_ALLOWED_ORIGINS = [
+    "https://chat-messag.netlify.app",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://chat-messag.netlify.app",
+]
+
+ALLOWED_HOSTS = ["*"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
