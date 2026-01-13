@@ -7,9 +7,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECRET_KEY & DEBUG
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")
-DEBUG = os.environ.get("DEBUG", "False") == "True"
+ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
+DEBUG = ENVIRONMENT != "production"
 
-ALLOWED_HOSTS = ["*"]  # Remplace par ton domaine Railway/Netlify si tu veux
+
+if ENVIRONMENT == "production":
+    ALLOWED_HOSTS = [
+        ".railway.app",
+    ]
+else:
+    ALLOWED_HOSTS = ["*"]
+ # Remplace par ton domaine Railway/Netlify si tu veux
+if ENVIRONMENT == "production":
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # Applications
 INSTALLED_APPS = [
@@ -65,8 +77,11 @@ TEMPLATES = [
 
 # Database (Railway / prod)
 DATABASE_URL = os.environ.get("DATABASE_URL")
-if DATABASE_URL:
+
+if ENVIRONMENT == "production" and DATABASE_URL:
+    # ===== PRODUCTION (Railway) =====
     result = urllib.parse.urlparse(DATABASE_URL)
+
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -76,11 +91,13 @@ if DATABASE_URL:
             "HOST": result.hostname,
             "PORT": result.port,
             "CONN_MAX_AGE": 600,
-            "OPTIONS": {"sslmode": "require"},
+            "OPTIONS": {
+                "sslmode": "require",
+            },
         }
     }
 else:
-    # fallback local dev
+    # ===== LOCAL =====
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -91,6 +108,7 @@ else:
             "PORT": 5432,
         }
     }
+
 
 # Auth
 AUTH_USER_MODEL = 'accounts.Utilisateur'
