@@ -151,12 +151,20 @@ USE_TZ = True
 
 # CORS & CSRF
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    "https://chat-messag.netlify.app",
-]
-CSRF_TRUSTED_ORIGINS = [
-    "https://chat-messag.netlify.app",
-]
+if ENVIRONMENT == "production":
+    CORS_ALLOWED_ORIGINS = [
+        "https://chat-messag.netlify.app",
+    ]
+    CSRF_TRUSTED_ORIGINS = [
+        "https://chat-messag.netlify.app",
+    ]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:5173",
+    ]
+    CSRF_TRUSTED_ORIGINS = [
+        "http://localhost:5173",
+    ]
 
 # Static & Media
 STATIC_URL = '/static/'

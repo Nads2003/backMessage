@@ -9,6 +9,6 @@ urlpatterns = [
     path('auth/inscription/', InscriptionView.as_view(), name='inscription'),
     path('auth/connexion/', TokenObtainPairView.as_view(), name='connexion'),
     path('rafraichir/', TokenRefreshView.as_view(), name='rafraichir'),
-    path('profil/', ProfilView.as_view(), name='profil'),
+    path('accounts/profile/', ProfilView.as_view(), name='profil'),
    
 ]
