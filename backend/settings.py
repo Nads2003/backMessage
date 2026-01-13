@@ -1,7 +1,7 @@
 import os
-import dj_database_url
 from pathlib import Path
 from datetime import timedelta
+import urllib.parse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -9,11 +9,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ["*"]  # Tu peux préciser le domaine Railway si nécessaire
+ALLOWED_HOSTS = ["*"]  # Remplace par ton domaine Railway/Netlify si tu veux
 
 # Applications
 INSTALLED_APPS = [
-    'daphne',   # ⭐ Obligatoire pour ASGI
+    'daphne',   # Obligatoire pour ASGI
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,7 +42,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# URLS
+# URLs
 ROOT_URLCONF = 'backend.urls'
 WSGI_APPLICATION = 'backend.wsgi.application'
 ASGI_APPLICATION = 'backend.asgi.application'
@@ -63,24 +63,45 @@ TEMPLATES = [
     },
 ]
 
-# Database: Railway PostgreSQL via DATABASE_URL
-DATABASES = {
-    "default": dj_database_url.config(
-        default=os.environ.get("DATABASE_URL"),
-        conn_max_age=600,  # Connection pooling
-        ssl_require=True   # SSL obligatoire en prod
-    )
-}
+# Database (Railway / prod)
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL:
+    result = urllib.parse.urlparse(DATABASE_URL)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": result.path[1:],
+            "USER": result.username,
+            "PASSWORD": result.password,
+            "HOST": result.hostname,
+            "PORT": result.port,
+            "CONN_MAX_AGE": 600,
+            "OPTIONS": {"sslmode": "require"},
+        }
+    }
+else:
+    # fallback local dev
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "messagerie_db",
+            "USER": "postgres",
+            "PASSWORD": "sambatra",
+            "HOST": "localhost",
+            "PORT": 5432,
+        }
+    }
 
 # Auth
 AUTH_USER_MODEL = 'accounts.Utilisateur'
 
-# REST Framework & JWT
+# REST Framework + JWT
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
