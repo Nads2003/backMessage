@@ -75,13 +75,10 @@ TEMPLATES = [
     },
 ]
 
-# Database (Railway / prod)
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if ENVIRONMENT == "production" and DATABASE_URL:
-    # ===== PRODUCTION (Railway) =====
     result = urllib.parse.urlparse(DATABASE_URL)
-
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -96,6 +93,7 @@ if ENVIRONMENT == "production" and DATABASE_URL:
             },
         }
     }
+
 else:
     # ===== LOCAL =====
     DATABASES = {
