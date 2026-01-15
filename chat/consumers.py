@@ -32,39 +32,47 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
-
     async def receive(self, text_data):
-        data = json.loads(text_data)
+     data = json.loads(text_data)
 
-        message_text = data.get("message", "")
-        local_id = data.get("localId")  # important pour le front
-        vocal_base64 = data.get("vocal")  # si vocal envoyé en base64
+     message_text = data.get("message", "")
+     local_id = data.get("localId")  # important pour le front
+     vocal_base64 = data.get("vocal")  # si vocal envoyé en base64
 
-        # si message texte
-        if message_text:
-            msg = await self.save_message(message_text)
-        # si vocal
-        elif vocal_base64:
-            msg = await self.save_vocal_message(vocal_base64)
-        else:
-            return
+    # Sauvegarder le message
+     if message_text:
+        msg = await self.save_message(message_text)
+     elif vocal_base64:
+        msg = await self.save_vocal_message(vocal_base64)
+     else:
+        return
 
-        # BROADCAST À TOUS
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                "type": "chat_message",
-                "id": msg.id,
-                "localId": local_id,
-                "contenu": msg.contenu,
-                "vocal": msg.vocal.url if msg.vocal else None,
-                "est_lu": msg.est_lu,
-                "expediteur": {
-                    "id": self.user.id,
-                    "username": self.user.username,
-                }
+    # ⚡ Vérifier si d'autres participants sont connectés sur cette conversation
+     participants = await self.get_other_participants()
+     if participants:
+        # Si l'autre utilisateur est connecté, marquer comme lu
+        msg.est_lu = True
+        await database_sync_to_async(msg.save)()
+
+    # BROADCAST À TOUS
+     await self.channel_layer.group_send(
+        self.room_group_name,
+        {
+            "type": "chat_message",
+            "id": msg.id,
+            "localId": local_id,
+            "contenu": msg.contenu,
+            "vocal": msg.vocal.url if msg.vocal else None,
+            "est_lu": msg.est_lu,
+            "expediteur": {
+                "id": self.user.id,
+                "username": self.user.username,
             }
-        )
+        }
+    )
+
+
+    
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
@@ -113,3 +121,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             id=self.conversation_id,
             participants=self.user
         ).exists()
+    @database_sync_to_async
+    def get_other_participants(self):
+     from chat.models import Conversation
+
+     conversation = Conversation.objects.get(id=self.conversation_id)
+    # Exclure l'expéditeur
+     return conversation.participants.exclude(id=self.user.id).exists()

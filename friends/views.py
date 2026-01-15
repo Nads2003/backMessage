@@ -127,20 +127,28 @@ class RepondreDemandeView(APIView):
         except DemandeAmi.DoesNotExist:
             return Response({"error": "Demande non trouvée"}, status=404)
         
+
 class ListeAmisChatView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        # Récupérer toutes les demandes acceptées où l'utilisateur est impliqué
+
+        # 🔹 Récupérer toutes les demandes acceptées où l'utilisateur est impliqué
         demandes = DemandeAmi.objects.filter(
             (Q(expediteur=user) | Q(destinataire=user)),
             accepte=True
         )
-        # Extraire les amis
+
+        # 🔹 Extraire les amis
         amis = [
             d.destinataire if d.expediteur == user else d.expediteur
             for d in demandes
         ]
-        serializer = UtilisateurChatSerializer(amis, many=True)
+
+        # 🔹 Serializer avec context pour get_last_message
+        serializer = UtilisateurChatSerializer(
+            amis, many=True, context={'request': request}
+        )
+
         return Response(serializer.data)
