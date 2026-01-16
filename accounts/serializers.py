@@ -16,6 +16,27 @@ class UtilisateurSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+class UtilisateurProfileSerializer(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Utilisateur
+        fields = [
+            "id",
+            "username",
+            "email",
+            "avatar",
+            "est_en_ligne",
+            "derniere_activite"
+        ]
+
+    def get_avatar(self, obj):
+        request = self.context.get("request")
+        if obj.avatar and request:
+            return request.build_absolute_uri(obj.avatar.url)
+        return None
+
+
 # accounts/serializers.py
 from rest_framework import serializers
 from chat.models import Conversation, Message

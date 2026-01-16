@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import InscriptionView, ProfilView
+from .views import InscriptionView, ProfilView,AvatarUpdateView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
-    TokenRefreshView,   
+    TokenRefreshView,  
+     
 )
 
 urlpatterns = [
@@ -10,5 +11,7 @@ urlpatterns = [
     path('auth/connexion/', TokenObtainPairView.as_view(), name='connexion'),
     path('rafraichir/', TokenRefreshView.as_view(), name='rafraichir'),
     path('accounts/profile/', ProfilView.as_view(), name='profil'),
+    path("accounts/profile/avatar/", AvatarUpdateView.as_view()),
+
    
 ]

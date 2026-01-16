@@ -2,9 +2,8 @@ from rest_framework import generics, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .serializers import UtilisateurChatSerializer
 from .models import Utilisateur
-from .serializers import UtilisateurSerializer
+from .serializers import UtilisateurSerializer,UtilisateurProfileSerializer
 
 
 class InscriptionView(generics.CreateAPIView):
@@ -16,20 +15,33 @@ class InscriptionView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     
 class ProfilView(APIView):
-    """
-    Vue pour récupérer les informations
-    de l'utilisateur connecté
-    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        utilisateur = request.user
+        serializer = UtilisateurProfileSerializer(
+            request.user,
+            context={"request": request}
+        )
+        return Response(serializer.data)
+
+from rest_framework.parsers import MultiPartParser, FormParser
+
+class AvatarUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        user = request.user
+        avatar = request.FILES.get("avatar")
+
+        if not avatar:
+            return Response({"error": "Aucune image"}, status=400)
+
+        user.avatar = avatar
+        user.save()
 
         return Response({
-            "id": utilisateur.id,
-            "nom_utilisateur": utilisateur.username,
-            "email": utilisateur.email,
-            "en_ligne": utilisateur.est_en_ligne,
-            "derniere_activite": utilisateur.derniere_activite
+            "message": "Photo mise à jour",
+            "avatar": user.avatar.url
         })
-#liste des utilisateurs
+
