@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from accounts.models import Utilisateur
-from accounts.serializers import UtilisateurChatSerializer
+from accounts.serializers import UtilisateurChatSerializer,UtilisateurProfileSerializer
 from .models import DemandeAmi
 from .serializers import UtilisateurSerializer, DemandeAmiSerializer
 
@@ -48,7 +48,7 @@ class ListeAmisView(APIView):
             accepte=True
         )
         amis = [d.destinataire if d.expediteur == user else d.expediteur for d in demandes]
-        serializer = UtilisateurSerializer(amis, many=True)
+        serializer = UtilisateurProfileSerializer(amis, many=True,context={"request": request})
         return Response(serializer.data)
 
 
